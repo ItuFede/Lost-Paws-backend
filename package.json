@@ -1,0 +1,23 @@
+{
+  "name": "lost-paws-backend",
+  "version": "0.1.0",
+  "bin": {
+    "lost-paws-backend": "bin/lost-paws-backend.js"
+  },
+  "scripts": {
+    "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
+    "cdk": "cdk",
+    "test": "jest",
+    "deploy:dev": "set ENV=prod && cdk deploy",
+    "destroy:dev": "set ENV=prod && cdk destroy"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.155.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.3.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.155.0",
+    "constructs": "^10.3.0"
+  }
+}
