@@ -1,0 +1,11 @@
+{
+  "name": "utils-layer",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^9.0.0",
+    "crypto": "^1.0.1",
+    "moment": "^2.29.4",
+    "@aws-sdk/client-dynamodb": "^3.284.0",
+    "@aws-sdk/lib-dynamodb": "^3.284.0"
+  }
+}

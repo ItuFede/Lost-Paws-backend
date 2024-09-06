@@ -8,8 +8,9 @@
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "cdk": "cdk",
     "test": "jest",
-    "deploy:dev": "set ENV=prod && cdk deploy",
-    "destroy:dev": "set ENV=prod && cdk destroy"
+    "buildLayers": "npm install && build_layers.sh",
+    "deploy:dev": "npm run buildLayers && set ENV=dev && cdk deploy",
+    "destroy:dev": "set ENV=dev && cdk destroy"
   },
   "devDependencies": {
     "aws-cdk": "^2.155.0",
@@ -17,7 +18,11 @@
     "prettier": "^3.3.3"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigateway": "^1.203.0",
+    "@aws-cdk/aws-dynamodb": "^1.203.0",
+    "@aws-cdk/aws-lambda": "^1.203.0",
     "aws-cdk-lib": "2.155.0",
+    "aws-sdk": "^2.1689.0",
     "constructs": "^10.3.0"
   }
 }
