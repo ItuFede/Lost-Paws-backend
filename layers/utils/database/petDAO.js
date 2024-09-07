@@ -53,8 +53,6 @@ const updateMissingPetState = async (tableName, id, position) => {
 }
 
 
-
-
 const scanPet = async (tableName, { lastEvaluatedKey, pagination }) => {
   console.log("In scanPet")
 
