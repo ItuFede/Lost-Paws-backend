@@ -10,33 +10,26 @@ const updateMissingPetState = async (tableName, id, position) => {
   const { Item } = await db.get(tableName, { id: id });
 
   if (!Item) {
+    console.error(`Item with id ${id} not found`);
     throw new Error(`Item with id ${id} not found`);
   }
 
   if (Item.isLost == "FALSE") {
+    console.error(`Pet id ${id} is not lost`);
     throw new Error(`Pet id ${id} is not lost`);
   }
 
-  // missingReports mas actual
-  const missingReports = Item.missingReports || [];
-  const mostRecentReport = missingReports.reduce((latest, report) => {
-    return report.missingDate > latest.missingDate ? report : latest;
-  }, missingReports[0]);
-
-  if (!mostRecentReport) {
-    throw new Error(`No missing reports found for item with id ${id}`);
-  }
+  const missingReport = Item.missingReport;
 
   const newLocation = {
-    Latitud: position.Latitud,
-    Longitud: position.Longitud,
-    Timestamp: generateTimestamp(),
+    latitude: position.latitude,
+    longitude: position.longitude,
+    timestamp: generateTimestamp(),
   };
-  mostRecentReport.locationsView.push(newLocation);
-  mostRecentReport.state = "FOUND";
+  missingReport.locationsView.push(newLocation);
   const updatedItem = {
     isLost: "FALSE",
-    missingReports,
+    missingReport,
   };
 
   try {
@@ -76,7 +69,27 @@ const scanPet = async (tableName, { lastEvaluatedKey, pagination }) => {
   }
 };
 
+const getPet = async (tableName, id) => {
+  console.log("In getPet");
+
+  try {
+    const { Item } = await db.get(tableName, { id: id });
+
+    if (!Item) {
+      throw new Error(`Item with id ${id} not found`);
+    }
+
+    return {
+      pet: Item,
+    };
+  } catch (error) {
+    console.error("Error retrieving pets", error);
+    return { success: false, message: "Error retrieving pet", error };
+  }
+};
+
 module.exports = {
   updateMissingPetState,
   scanPet,
+  getPet,
 };
