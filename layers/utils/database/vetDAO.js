@@ -18,7 +18,7 @@ const scanVet = async (tableName, { lastEvaluatedKey, pagination }) => {
     }
 
     return {
-      pets: dbResult.Items,
+      vets: dbResult.Items,
       LastEvaluatedKey: dbResult.LastEvaluatedKey,
     };
   } catch (error) {

@@ -2,6 +2,7 @@
   "name": "utils-layer",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1691.0",
     "uuid": "^9.0.0",
     "crypto": "^1.0.1",
     "moment": "^2.29.4",
