@@ -74,7 +74,9 @@ const getPet = async (tableName, id) => {
   console.log("In getPet");
 
   try {
+    console.log("DATA getPet:::", { tableName, id });
     const { Item } = await db.get(tableName, { id: id });
+    console.log("DATA getPet:::", { tableName, id, Item });
 
     return {
       pet: Item,
@@ -100,10 +102,12 @@ const getPetImages = async (bucketName, idPet) => {
       console.log("params:::", params);
 
       const img = await s3.getObject(params);
-      //console.log("img:::", img);
+      console.log("On getPetImages - img:::", img);
 
       let base64String;
-      if (img) base64String = Buffer.from(img.Body).toString("base64");
+      if (img && img.Body) {
+        base64String = Buffer.from(img.Body).toString("base64");
+      }
 
       images.push(`data:image/jpeg;base64,${base64String}`);
     } catch (error) {
