@@ -31,28 +31,19 @@ const getUserInfoByUserName = async (token, userPoolId) => {
   const response = await client.send(command);
   console.log("response", response);
 
-  const email = response.UserAttributes.find(
-    (attr) => attr.Name === "email"
+  const getValue = (fieldName) => response.UserAttributes.find(
+    (attr) => attr.Name === fieldName
   )?.Value;
-  const name = response.UserAttributes.find(
-    (attr) => attr.Name === "name"
-  )?.Value;
-  const phone = response.UserAttributes.find(
-    (attr) => attr.Name === "custom:phone"
-  )?.Value;
-  const otherPhone = response.UserAttributes.find(
-    (attr) => attr.Name === "custom:otherPhone"
-  )?.Value;
-  const idPets = response.UserAttributes.find(
-    (attr) => attr.Name === "custom:idPets"
-  )?.Value;
+
+  const email = getValue("email");
+  const name = getValue("name");
+  const phone = getValue("custom:phone");
+  const otherPhone = getValue("custom:otherPhone");
+  const idPets = getValue("custom:idPets");
 
   /* {"facebook":"","instagram":"","tiktok":""} */
-  let socialMedia = response.UserAttributes.find(
-    (attr) => attr.Name === "custom:socialMedia"
-  )?.Value;
-
-  if (socialMedia) socialMedia = JSON.parse(socialMedia);
+  const originalSocialMedia = getValue("custom:socialMedia");
+  const socialMedia = socialMedia ? JSON.parse(socialMedia) : undefined;
 
   return { email, name, phone, otherPhone, idPets, socialMedia };
 };
