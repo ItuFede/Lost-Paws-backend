@@ -31,10 +31,10 @@ const getUserInfoByUserName = async (token, userPoolId) => {
   const response = await client.send(command);
   console.log("response", response);
 
-  const getValue = (fieldName) => response.UserAttributes.find(
-    (attr) => attr.Name === fieldName
-  )?.Value;
+  const getValue = (fieldName) =>
+    response.UserAttributes.find((attr) => attr.Name === fieldName)?.Value;
 
+  const id = getValue("sub");
   const email = getValue("email");
   const name = getValue("name");
   const phone = getValue("custom:phone");
@@ -43,9 +43,11 @@ const getUserInfoByUserName = async (token, userPoolId) => {
 
   /* {"facebook":"","instagram":"","tiktok":""} */
   const originalSocialMedia = getValue("custom:socialMedia");
-  const socialMedia = socialMedia ? JSON.parse(socialMedia) : undefined;
+  const socialMedia = originalSocialMedia
+    ? JSON.parse(originalSocialMedia)
+    : undefined;
 
-  return { email, name, phone, otherPhone, idPets, socialMedia };
+  return { id, email, name, phone, otherPhone, idPets, socialMedia };
 };
 
 const getUserPetIdsByUserName = async (token, userPoolId) => {

@@ -86,6 +86,30 @@ const getPet = async (tableName, id) => {
   }
 };
 
+const getUserPets = async (tableName, ownerId) => {
+  console.log("In getUserPets");
+
+  const params = {
+    IndexName: "OwnerIdIndex",
+    KeyConditionExpression: "ownerId = :ownerId",
+    ExpressionAttributeValues: {
+      ":ownerId": ownerId,
+    },
+  };
+
+  console.log("DATA getUserPets:::", { tableName, ownerId, params });
+
+  try {
+    const { Items } = await db.query(tableName, params, null);
+
+    return {
+      pets: Items,
+    };
+  } catch (error) {
+    throw new Error(`Error retrieving pets, ${error}`);
+  }
+};
+
 const getPetImages = async (bucketName, idPet) => {
   let fileNames = await s3.getFiles(bucketName, idPet);
   fileNames = fileNames.filter((obj) => obj.includes(".")); //Remuevo la carpeta
@@ -93,29 +117,29 @@ const getPetImages = async (bucketName, idPet) => {
 
   let images = [];
 
-  for (const fileName of fileNames) {
-    try {
-      const params = {
-        Bucket: bucketName,
-        Key: fileName,
-      };
-      console.log("params:::", params);
+  await Promise.all(
+    fileNames.map(async (fileName) => {
+      try {
+        const params = {
+          Bucket: bucketName,
+          Key: fileName,
+        };
+        console.log("params:::", params);
 
-      const img = await s3.getObject(params);
-      console.log("On getPetImages - img:::", img);
+        const img = await s3.getObject(params);
+        console.log("On getPetImages - img:::", img);
 
-      let base64String;
-      if (img && img.Body) {
-        base64String = Buffer.from(img.Body).toString("base64");
+        let base64String;
+        if (img && img.Body) {
+          base64String = Buffer.from(img.Body).toString("base64");
+        }
+
+        images.push(`data:image/jpeg;base64,${base64String}`);
+      } catch (error) {
+        console.error("Se ha producido un error:", error.message);
       }
-
-      images.push(`data:image/jpeg;base64,${base64String}`);
-    } catch (error) {
-      console.error("Se ha producido un error:", error.message);
-    }
-  }
-
-  //console.log("Images:::", images);
+    })
+  );
 
   return images;
 };
@@ -124,5 +148,6 @@ module.exports = {
   updateMissingPetState,
   scanPet,
   getPet,
+  getUserPets,
   getPetImages,
 };
