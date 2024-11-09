@@ -1,5 +1,6 @@
 const db = require("database");
 const s3 = require("s3");
+const { generateUUIDV4 } = require("helpers");
 
 // TODO: Voy a tener que agregar un interface de los users y pets y un historial de las mascotas que se perdieron y encontraron
 
@@ -133,7 +134,7 @@ const getPetImages = async (bucketName, idPet) => {
         if (img && img.Body) {
           base64String = Buffer.from(img.Body).toString("base64");
         }
-
+        console.log("On getPetImages - base64String:::", base64String);
         images.push(`data:image/jpeg;base64,${base64String}`);
       } catch (error) {
         console.error("Se ha producido un error:", error.message);
@@ -144,10 +145,71 @@ const getPetImages = async (bucketName, idPet) => {
   return images;
 };
 
+const base64ToBuffer = (base64String) => {
+  const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
+  return Buffer.from(base64Data, "base64");
+};
+
+const registerPet = async (
+  body,
+  userId,
+  phoneNumber,
+  bucketName,
+  tablePetName
+) => {
+  const UUIDV4 = generateUUIDV4();
+
+  console.log("registerPet:::", {
+    UUIDV4,
+    body,
+    userId,
+    bucketName,
+    tablePetName,
+  });
+
+  for (let index = 0; index < body.images.length; index++) {
+    try {
+      const imageBase64 = body.images[index].base64;
+
+      const buffer = base64ToBuffer(imageBase64);
+      await s3.uploadFile(
+        bucketName,
+        UUIDV4,
+        "image_" + index + ".jfif", //TODO: Extension
+        buffer
+      );
+    } catch (error) {
+      console.error("ERROR:::", error);
+      throw new Error("Error al guardar el archivo en S3", error);
+    }
+  }
+
+  const newPet = {
+    id: UUIDV4,
+    age: body.birthDate,
+    animal: body.animal,
+    breed: body.breed,
+    characteristics: body.characteristics,
+    description: body.description,
+    generalColor: body.colors,
+    isLost: "FALSE",
+    missingReport: {},
+    name: body.name,
+    ownerId: userId,
+    phoneNumberOwner: phoneNumber,
+    sex: body.sex,
+    size: body.size,
+    medicalTreatment: body.medicalTreatment,
+  };
+
+  return await db.create(tablePetName, newPet);
+};
+
 module.exports = {
   updateMissingPetState,
   scanPet,
   getPet,
   getUserPets,
   getPetImages,
+  registerPet,
 };

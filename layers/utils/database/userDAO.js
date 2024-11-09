@@ -108,10 +108,32 @@ const updateUserAttributesAdmin = async (userPoolId, token, listAttributes) => {
   return await client.send(command);
 };
 
+const isValidToken = async (token, userPoolId) => {
+  try {
+    const username = getUserNameByJWT(token);
+    const command = new AdminGetUserCommand({
+      UserPoolId: userPoolId,
+      Username: username,
+    });
+
+    return await client
+      .send(command)
+      .then((userData) => userData)
+      .catch((e) => {
+        console.error("ERROR:::", e);
+        throw new Error("Token inválido o usuario no autorizado");
+      });
+  } catch (error) {
+    console.error("Error de validación de token:", error.message);
+    throw new Error("Token inválido o usuario no autorizado");
+  }
+};
+
 module.exports = {
   getUser,
   getUserInfoByUserName,
   updateUserAttributes,
   updateUserAttributesAdmin,
   getUserPetIdsByUserName,
+  isValidToken,
 };

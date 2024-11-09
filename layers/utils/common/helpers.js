@@ -7,6 +7,11 @@ function shortenUUID(uuid) {
   return hash.substring(0, 8);
 }
 
+const generateUUIDV4 = () => {
+  console.log("In generateUUIDV4");
+  return uuid.v4();
+};
+
 const generateUUID = () => {
   console.log("In generateUUID");
 
@@ -44,12 +49,31 @@ const getDynamoDBExpressions = (attr) => {
 };
 
 const getUserNameByJWT = (token) => {
+  console.log("on getUserNameByJWT");
   const decoded = jwt.decode(token);
+
+  console.log("decoded:::", decoded);
+  if (!decoded) {
+    console.error("Token inválido");
+    throw new Error("Token inválido");
+  }
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  if (decoded.exp < currentTime) {
+    console.error(
+      "Token caducado:::",
+      `decoded.payload.exp: ${decoded.exp}, currentTime: ${currentTime}`
+    );
+    throw new Error("Token caducado");
+  }
+
+  console.log("exit getUserNameByJWT");
   return decoded.username;
 };
 
 module.exports = {
   generateUUID,
+  generateUUIDV4,
   getUserNameByJWT,
   getDynamoDBExpressions,
   getDynamoDBArrayExpression,
