@@ -44,6 +44,72 @@ const updateMissingPetState = async (tableName, id, position) => {
   }
 };
 
+const updatePetLost = async (tableName, petId, missingReport, ownerId) => {
+  const { Item } = await db.get(tableName, { id: petId });
+
+  if (!Item) {
+    console.error(`Item with petId ${petId} not found`);
+    throw new Error(`Item with petId ${petId} not found`);
+  }
+
+  if (Item.ownerId != ownerId) {
+    console.error(`Item is not from the same owner`);
+    throw new Error(`Item is not from the same owner`);
+  }
+
+  if (Item.isLost == "TRUE") {
+    console.error(`Pet petId ${petId} is already missing`);
+    throw new Error(`Pet petId ${petId} is already missing`);
+  }
+
+  const updatedItem = {
+    isLost: "TRUE",
+    missingReport,
+  };
+
+  try {
+    let dbResult = await db.update(tableName, { id: petId }, updatedItem);
+    console.log("dbResultPets:::", dbResult);
+    return dbResult;
+  } catch (error) {
+    console.error("Error updating pet:", error);
+    return { success: false, message: "Error updating pet", error };
+  }
+};
+
+const updatePetLostCancel = async (tableName, petId, ownerId) => {
+  const { Item } = await db.get(tableName, { id: petId });
+
+  if (!Item) {
+    console.error(`Item with petId ${petId} not found`);
+    throw new Error(`Item with petId ${petId} not found`);
+  }
+
+  if (Item.ownerId != ownerId) {
+    console.error(`Item is not from the same owner`);
+    throw new Error(`Item is not from the same owner`);
+  }
+
+  if (Item.isLost == "FALSE") {
+    console.error(`Pet petId ${petId} is not missing`);
+    throw new Error(`Pet petId ${petId} is not missing`);
+  }
+
+  const updatedItem = {
+    isLost: "FALSE",
+    missingReport: {},
+  };
+
+  try {
+    let dbResult = await db.update(tableName, { id: petId }, updatedItem);
+    console.log("dbResultPets:::", dbResult);
+    return dbResult;
+  } catch (error) {
+    console.error("Error updating pet:", error);
+    return { success: false, message: "Error updating pet", error };
+  }
+};
+
 const scanPet = async (tableName, { lastEvaluatedKey, pagination }) => {
   console.log("In scanPet");
 
@@ -207,6 +273,8 @@ const registerPet = async (
 
 module.exports = {
   updateMissingPetState,
+  updatePetLost,
+  updatePetLostCancel,
   scanPet,
   getPet,
   getUserPets,
