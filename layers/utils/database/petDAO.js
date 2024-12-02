@@ -211,6 +211,29 @@ const getPetImages = async (bucketName, idPet) => {
   return images;
 };
 
+const deletePet = async (tableName, petId, ownerId) => {
+  const { Item } = await db.get(tableName, { id: petId });
+
+  if (!Item) {
+    console.error(`Item with petId ${petId} not found`);
+    throw new Error(`Item with petId ${petId} not found`);
+  }
+
+  if (Item.ownerId != ownerId) {
+    console.error(`Item is not from the same owner`);
+    throw new Error(`Item is not from the same owner`);
+  }
+
+  try {
+    let dbResult = await db.delete(tableName, { id: petId });
+    console.log("dbResultPets:::", dbResult);
+    return dbResult;
+  } catch (error) {
+    console.error("Error deleting pet:", error);
+    return { success: false, message: "Error deleting pet", error };
+  }
+};
+
 const base64ToBuffer = (base64String) => {
   const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
   return Buffer.from(base64Data, "base64");
@@ -271,6 +294,66 @@ const registerPet = async (
   return await db.create(tablePetName, newPet);
 };
 
+async function clearFolderAndUploadImages(bucketName, folderName, images) {
+  try {
+    // Limpio S3
+    await s3.deleteFiles(bucketName, folderName);
+
+    for (let index = 0; index < images.length; index++) {
+      try {
+        const imageBase64 = images[index].base64;
+        const buffer = base64ToBuffer(imageBase64);
+
+        await s3.uploadFile(
+          bucketName,
+          folderName,
+          "image_" + index + ".jfif", // TODO: Cambiar extensión si es necesario
+          buffer
+        );
+      } catch (error) {
+        console.error("ERROR:::", error);
+        throw new Error("Error al guardar el archivo en S3");
+      }
+    }
+
+    console.log("Todas las imágenes fueron subidas exitosamente.");
+  } catch (error) {
+    console.error("Error al limpiar la carpeta o subir las imágenes:", error);
+    throw error;
+  }
+}
+
+const updateUserPet = async (body, userId, bucketName, tablePetName) => {
+  const { Item } = await db.get(tablePetName, { id: body.id });
+
+  if (!Item) {
+    console.error(`Item with petId ${body.id} not found`);
+    throw new Error(`Item with petId ${body.id} not found`);
+  }
+
+  if (Item.ownerId != userId) {
+    console.error(`Item is not from the same owner`);
+    throw new Error(`Item is not from the same owner`);
+  }
+
+  await clearFolderAndUploadImages(bucketName, body.id, body.images);
+
+  const updatePet = {
+    age: body.birthDate,
+    animal: body.animal,
+    breed: body.breed,
+    characteristics: body.characteristics,
+    description: body.description,
+    generalColor: body.colors,
+    name: body.name,
+    sex: body.sex,
+    size: body.size,
+    medicalTreatment: body.medicalTreatment,
+  };
+
+  return await db.update(tablePetName, { id: body.id }, updatePet);
+};
+
 module.exports = {
   updateMissingPetState,
   updatePetLost,
@@ -278,6 +361,8 @@ module.exports = {
   scanPet,
   getPet,
   getUserPets,
+  updateUserPet,
   getPetImages,
   registerPet,
+  deletePet,
 };

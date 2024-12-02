@@ -1,6 +1,6 @@
 "use strict";
 
-const { S3 } = require("@aws-sdk/client-s3");
+const { S3, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = new S3();
 
 exports.getObject = async (params) => {
@@ -39,6 +39,41 @@ exports.getFiles = async (bucketName, path) => {
   } catch (error) {
     console.error("Error al listar los archivos:", error);
     throw new Error(`Error al listar los archivos en S3 ERROR::: ${error}`);
+  }
+};
+
+exports.deleteFiles = async (bucketName, path) => {
+  try {
+    // Obtener todos los archivos de la carpeta
+    const files = await exports.getFiles(bucketName, path);
+
+    if (files.length === 0) {
+      console.log(`No se encontraron archivos en ${bucketName}/${path}`);
+      return;
+    }
+
+    // Eliminar cada archivo encontrado
+    for (const file of files) {
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: file,
+      });
+
+      try {
+        await s3.send(deleteCommand);
+        console.log(`Archivo eliminado: ${file}`);
+      } catch (error) {
+        console.error(`Error al eliminar el archivo ${file}:`, error);
+        throw new Error(`Error al eliminar el archivo ${file}`);
+      }
+    }
+
+    console.log(
+      `Todos los archivos en ${bucketName}/${path} han sido eliminados.`
+    );
+  } catch (error) {
+    console.error(`Error al borrar archivos de la carpeta ${path}:`, error);
+    throw new Error(`Error al borrar archivos en S3 ERROR::: ${error}`);
   }
 };
 
