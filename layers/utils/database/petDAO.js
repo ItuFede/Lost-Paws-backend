@@ -301,7 +301,7 @@ async function clearFolderAndUploadImages(bucketName, folderName, images) {
 
     for (let index = 0; index < images.length; index++) {
       try {
-        const imageBase64 = images[index].base64;
+        const imageBase64 = images[index].base64 || images[index];
         const buffer = base64ToBuffer(imageBase64);
 
         await s3.uploadFile(
